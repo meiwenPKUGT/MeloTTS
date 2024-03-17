@@ -882,7 +882,7 @@ class SynthesizerTrn(nn.Module):
             self.emb_g = nn.Embedding(n_speakers, gin_channels)
         else:
             self.ref_enc = ReferenceEncoder(spec_channels, gin_channels, layernorm=norm_refenc)
-        self.use_vc = use_vc
+        self.use_vc = use_vc # whether to use voice cloning
 
 
     def forward(self, x, x_lengths, y, y_lengths, sid, tone, language, bert, ja_bert):
@@ -980,6 +980,23 @@ class SynthesizerTrn(nn.Module):
         y=None,
         g=None,
     ):
+        """
+        Args:
+            x: phone sequence, [B, S], S is the phone sequence length (with mask)
+            x_lengths: the effective phone sequence length, [B]
+            sid: speaker id, [B]
+            tone: tone sequence, [B, S]
+            language: language id sequence, [B, S]
+            bert:  the bert embeding of the ZH phone sequence, [b, 1024, S], for non-ZH, it is zero embedding
+            ja_bert: the bert embeding of the non-ZH (["JP", "EN", "ZH_MIX_EN", 'KR', 'SP', 'ES', 'FR', 'DE', 'RU']) phone sequence, [b, 768, S], for ZH, it is zero embedding
+            noise_scale: float
+            length_scale: float
+            noise_scale_w: float
+            max_len: int
+            sdp_ratio: float
+            y: ?
+            g: the speaker embedding, [B, H, 1]
+        """
         # x, m_p, logs_p, x_mask = self.enc_p(x, x_lengths, tone, language, bert)
         # g = self.gst(y)
         if g is None:
