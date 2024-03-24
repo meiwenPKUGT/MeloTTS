@@ -115,7 +115,12 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         # NOTE: normalize has been achieved by torchaudio
         # audio_norm = audio / self.max_wav_value
         audio_norm = audio_norm.unsqueeze(0)
-        spec_filename = filename.replace(".wav", ".spec.pt")
+        if filename.endswith(".wav"):
+            spec_filename = filename.replace(".wav", ".spec.pt")
+        elif filename.endswith(".mp3"):
+            spec_filename = filename.replace(".mp3", ".spec.pt")
+        else:
+            raise ValueError(f"Unknown file type: {filename}")
         if self.use_mel_spec_posterior:
             spec_filename = spec_filename.replace(".spec.pt", ".mel.pt")
         try:
@@ -156,7 +161,12 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
             for i in range(len(word2ph)):
                 word2ph[i] = word2ph[i] * 2
             word2ph[0] += 1
-        bert_path = wav_path.replace(".wav", ".bert.pt")
+        if wav_path.endswith(".wav"):
+            bert_path = wav_path.replace(".wav", ".bert.pt")
+        elif wav_path.endswith(".mp3"):
+            bert_path = wav_path.replace(".mp3", ".bert.pt")
+        else:
+            raise ValueError(f"Unknown file type: {wav_path}")
         try:
             bert = torch.load(bert_path)
             assert bert.shape[-1] == len(phone)

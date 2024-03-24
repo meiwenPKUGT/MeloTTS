@@ -17,16 +17,17 @@ from text.symbols import symbols, num_languages, num_tones
     type=click.Path(exists=True, file_okay=True, dir_okay=False),
 )
 @click.option("--cleaned-path", default=None)
-@click.option("--train-path", default=None)
-@click.option("--val-path", default=None)
+@click.option("--train-path", default=None, help="The path to training data list.If not provided, will be saved in the same directory as metadata")
+@click.option("--val-path", default=None, help="The path to validation data list.If not provided, will be saved in the same directory as metadata")
 @click.option(
     "--config_path",
     default="configs/config.json",
     type=click.Path(exists=True, file_okay=True, dir_okay=False),
+    help="The path to the config json file, which will be updated with the new training and validation data paths. ",
 )
-@click.option("--val-per-spk", default=4)
-@click.option("--max-val-total", default=8)
-@click.option("--clean/--no-clean", default=True)
+@click.option("--val-per-spk", default=4, help="The number of validation samples per speaker")
+@click.option("--max-val-total", default=8, help="The maximum number of validation samples")
+@click.option("--clean/--no-clean", default=True, help="Whether to normalize the text and generate the corresponding phoneme, tone, and word2ph files")
 def main(
     metadata: str,
     cleaned_path: Optional[str],
@@ -74,7 +75,12 @@ def main(
                         " ".join([str(i) for i in word2ph]),
                     )
                 )
-                bert_path = utt.replace(".wav", ".bert.pt")
+                if utt.endswith(".wav"):
+                    bert_path = utt.replace(".wav", ".bert.pt")
+                elif utt.endswith(".mp3"):
+                    bert_path = utt.replace(".mp3", ".bert.pt")
+                else:
+                    raise ValueError(f"{utt}: file extension is not supported")
                 os.makedirs(os.path.dirname(bert_path), exist_ok=True)
                 torch.save(bert.cpu(), bert_path)
             except Exception as error:
