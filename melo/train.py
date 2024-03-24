@@ -5,8 +5,8 @@ import torch
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
+# import torch.distributed as dist
+# from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.cuda.amp import autocast, GradScaler
 from tqdm import tqdm
 import logging
@@ -48,14 +48,16 @@ global_step = 0
 
 def run():
     hps = utils.get_hparams()
-    local_rank = int(os.environ["LOCAL_RANK"])
-    dist.init_process_group(
-        backend="gloo",
-        init_method="env://",  # Due to some training problem,we proposed to use gloo instead of nccl.
-        rank=local_rank,
-    )  # Use torchrun instead of mp.spawn
-    rank = dist.get_rank()
-    n_gpus = dist.get_world_size()
+    # local_rank = int(os.environ["LOCAL_RANK"])
+    # dist.init_process_group(
+    #     backend="gloo",
+    #     init_method="env://",  # Due to some training problem,we proposed to use gloo instead of nccl.
+    #     rank=local_rank,
+    # )  # Use torchrun instead of mp.spawn
+    # rank = dist.get_rank()
+    # n_gpus = dist.get_world_size()
+    rank = 0
+    n_gpus = 1
     
     torch.manual_seed(hps.train.seed)
     torch.cuda.set_device(rank)
@@ -163,8 +165,8 @@ def run():
         )
     else:
         optim_dur_disc = None
-    net_g = DDP(net_g, device_ids=[rank], find_unused_parameters=True)
-    net_d = DDP(net_d, device_ids=[rank], find_unused_parameters=True)
+    # net_g = DDP(net_g, device_ids=[rank], find_unused_parameters=True)
+    # net_d = DDP(net_d, device_ids=[rank], find_unused_parameters=True)
     
     pretrain_G, pretrain_D, pretrain_dur = load_pretrain_model()
     hps.pretrain_G = hps.pretrain_G or pretrain_G
@@ -188,7 +190,7 @@ def run():
 
 
     if net_dur_disc is not None:
-        net_dur_disc = DDP(net_dur_disc, device_ids=[rank], find_unused_parameters=True)
+        # net_dur_disc = DDP(net_dur_disc, device_ids=[rank], find_unused_parameters=True)
         if hps.pretrain_dur:
             utils.load_checkpoint(
                     hps.pretrain_dur,
